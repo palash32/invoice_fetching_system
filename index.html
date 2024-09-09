@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .invoice {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            width: 150px;
+            height: 50px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .invoice-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: right;
+        }
+        .address-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .address {
+            width: 48%;
+        }
+        .address h3 {
+            margin-top: 0;
+            font-size: 14px;
+        }
+        .address p {
+            margin: 0;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+        }
+        .signature-placeholder {
+            width: 200px;
+            height: 60px;
+            border: 1px solid #ccc;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="header">
+            <div class="logo">Company Logo</div>
+            <div class="invoice-title">
+                Tax Invoice/Bill of Supply/Cash Memo<br>
+                (Original for Recipient)
+            </div>
+        </div>
+        <div class="address-container">
+            <div class="address">
+                <h3>Sold By:</h3>
+                <p id="seller-name"></p>
+                <p id="seller-address"></p>
+                <p id="seller-city-state-pin"></p>
+                <p>PAN No: <span id="seller-pan"></span></p>
+                <p>GST Registration No: <span id="seller-gst"></span></p>
+            </div>
+            <div class="address">
+                <h3>Billing Address:</h3>
+                <p id="billing-name"></p>
+                <p id="billing-address"></p>
+                <p id="billing-city-state-pin"></p>
+                <p>State/UT Code: <span id="billing-state-code"></span></p>
+            </div>
+        </div>
+        <div class="address-container">
+            <div class="address">
+                <p>Place of Supply: <span id="place-of-supply"></span></p>
+                <p>Place of Delivery: <span id="place-of-delivery"></span></p>
+                <p>Order Number: <span id="order-number"></span></p>
+                <p>Order Date: <span id="order-date"></span></p>
+            </div>
+            <div class="address">
+                <h3>Shipping Address:</h3>
+                <p id="shipping-name"></p>
+                <p id="shipping-address"></p>
+                <p id="shipping-city-state-pin"></p>
+                <p>State/UT Code: <span id="shipping-state-code"></span></p>
+                <p>Invoice Number: <span id="invoice-number"></span></p>
+                <p>Invoice Details: <span id="invoice-details"></span></p>
+                <p>Invoice Date: <span id="invoice-date"></span></p>
+            </div>
+        </div>
+        <table id="invoice-items">
+            <thead>
+                <tr>
+                    <th>Sl. No</th>
+                    <th>Description</th>
+                    <th>Unit Price</th>
+                    <th>Qty</th>
+                    <th>Net Amount</th>
+                    <th>Tax Rate</th>
+                    <th>Tax Type</th>
+                    <th>Tax Amount</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be inserted here dynamically -->
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="8" style="text-align: right;">TOTAL:</td>
+                    <td id="total-amount"></td>
+                </tr>
+            </tfoot>
+        </table>
+        <p>Amount in Words: <span id="amount-in-words"></span></p>
+        <p>Whether tax is payable under reverse charge: <span id="reverse-charge"></span></p>
+        <div class="signature">
+            <p>For <span id="company-name"></span>:</p>
+            <div class="signature-placeholder"></div>
+            <p>Authorized Signatory</p>
+        </div>
+    </div>
+
+    <script>
+        function generateInvoice(data) {
+            try {
+                validateInputData(data);
+                
+                setElementText('seller-name', data.sellerDetails.name);
+                setElementText('seller-address', data.sellerDetails.address);
+                setElementText('seller-city-state-pin', `${data.sellerDetails.city}, ${data.sellerDetails.state}, ${data.sellerDetails.pincode}`);
+                setElementText('seller-pan', data.sellerDetails.panNo);
+                setElementText('seller-gst', data.sellerDetails.gstRegistrationNo);
+
+        
+                setElementText('billing-name', data.billingDetails.name);
+                setElementText('billing-address', data.billingDetails.address);
+                setElementText('billing-city-state-pin', `${data.billingDetails.city}, ${data.billingDetails.state}, ${data.billingDetails.pincode}`);
+                setElementText('billing-state-code', data.billingDetails.stateUtCode);
+
+                setElementText('shipping-name', data.shippingDetails.name);
+                setElementText('shipping-address', data.shippingDetails.address);
+                setElementText('shipping-city-state-pin', `${data.shippingDetails.city}, ${data.shippingDetails.state}, ${data.shippingDetails.pincode}`);
+                setElementText('shipping-state-code', data.shippingDetails.stateUtCode);
+
+            
+                setElementText('place-of-supply', data.placeOfSupply);
+                setElementText('place-of-delivery', data.placeOfDelivery);
+                setElementText('order-number', data.orderDetails.orderNo);
+                setElementText('order-date', data.orderDetails.orderDate);
+                setElementText('invoice-number', data.invoiceDetails.invoiceNo);
+                setElementText('invoice-details', data.invoiceDetails.invoiceDetails);
+                setElementText('invoice-date', data.invoiceDetails.invoiceDate);
+                setElementText('reverse-charge', data.reverseCharge ? 'Yes' : 'No');
+                setElementText('company-name', data.sellerDetails.name);
+
+                const tbody = document.getElementById('invoice-items').getElementsByTagName('tbody')[0];
+                let totalAmount = 0;
+                data.items.forEach((item, index) => {
+                    const row = tbody.insertRow();
+                    const netAmount = item.unitPrice * item.quantity - (item.discount || 0);
+                    const taxType = data.placeOfSupply === data.placeOfDelivery ? 'CGST & SGST' : 'IGST';
+                    const taxRate = item.taxRate || 18; // Default to 18% if not provided
+                    const taxAmount = netAmount * (taxRate / 100);
+                    const totalItemAmount = netAmount + taxAmount;
+                    totalAmount += totalItemAmount;
+
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.description}</td>
+                        <td>₹${item.unitPrice.toFixed(2)}</td>
+                        <td>${item.quantity}</td>
+                        <td>₹${netAmount.toFixed(2)}</td>
+                        <td>${taxRate}%</td>
+                        <td>${taxType}</td>
+                        <td>₹${taxAmount.toFixed(2)}</td>
+                        <td>₹${totalItemAmount.toFixed(2)}</td>
+                    `;
+                });
+
+                setElementText('total-amount', `₹${totalAmount.toFixed(2)}`);
+                setElementText('amount-in-words', numberToWords(totalAmount) + ' only');
+            } catch (error) {
+                console.error('Error generating invoice:', error);
+                alert('An error occurred while generating the invoice. Please check the console for details.');
+            }
+        }
+
+        function setElementText(id, text) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = text;
+            } else {
+                console.warn(`Element with id '${id}' not found`);
+            }
+        }
+
+        function validateInputData(data) {
+            const requiredFields = [
+                'sellerDetails', 'billingDetails', 'shippingDetails', 'placeOfSupply',
+                'placeOfDelivery', 'orderDetails', 'invoiceDetails', 'items'
+            ];
+
+            requiredFields.forEach(field => {
+                if (!data[field]) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
+            });
+
+            if (!Array.isArray(data.items) || data.items.length === 0) {
+                throw new Error('Items array is empty or not provided');
+            }
+
+            data.items.forEach((item, index) => {
+                if (!item.description || typeof item.unitPrice !== 'number' || typeof item.quantity !== 'number') {
+                    throw new Error(`Invalid item data at index ${index}`);
+                }
+            });
+        }
+
+        function numberToWords(number) {
+            const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            
+            if (number < 20) return units[number];
+            if (number < 100) return tens[Math.floor(number / 10)] + (number % 10 !== 0 ? ' ' + units[number % 10] : '');
+            if (number < 1000) return units[Math.floor(number / 100)] + ' Hundred' + (number % 100 !== 0 ? ' And ' + numberToWords(number % 100) : '');
+            return numberToWords(Math.floor(number / 1000)) + ' Thousand' + (number % 1000 !== 0 ? ' ' + numberToWords(number % 1000) : '');
+        }
+
+        const invoiceData = {
+            sellerDetails: {
+                name: 'Varasiddhi Silk Exports',
+                address: '75, 3rd Cross, Lalbagh Road',
+                city: 'BENGALURU',
+                state: 'KARNATAKA',
+                pincode: '560027',
+                panNo: 'AACFV3325K',
+                gstRegistrationNo: '29AACFV3325K1ZY'
+            },
+            billingDetails: {
+                name: 'Madhu B',
+                address: 'Eurofins IT Solutions India Pvt Ltd., 1st Floor, Maruti Platinum, Lakshminarayana Pura, AECS Layou',
+                city: 'BENGALURU',
+                state: 'KARNATAKA',
+                pincode: '560037',
+                stateUtCode: '29'
+            },
+            shippingDetails: {
+                name: 'Madhu B',
+                address: 'Eurofins IT Solutions India Pvt Ltd., 1st Floor, Maruti Platinum, Lakshminarayana Pura, AECS Layou',
+                city: 'BENGALURU',
+                state: 'KARNATAKA',
+                pincode: '560037',
+                stateUtCode: '29'
+            },
+            placeOfSupply: 'KARNATAKA',
+            placeOfDelivery: 'KARNATAKA',
+            orderDetails: {
+                orderNo: '403-3225714-7676307',
+                orderDate: '28.10.2019'
+            },
+            invoiceDetails: {
+                invoiceNo: 'IN-761',
+                invoiceDetails: 'KA-310565025-1920',
+                invoiceDate: '28.10.2019'
+            },
+            reverseCharge: false,
+            items: [
+                {
+                    description: "Varasiddhi Silks Men's Formal Shirt (SH-05-42, Navy Blue, 42)",
+                    unitPrice: 538.10,
+                    quantity: 1,
+                    discount: 0
+                },
+                {
+                    description: "Varasiddhi Silks Men's Formal Shirt (SH-05-40, Navy Blue, 40)",
+                    unitPrice: 538.10,
+                    quantity: 1,
+                    discount: 0
+                }
+            ]
+        };
+
+        window.addEventListener('load', () => generateInvoice(invoiceData));
+    </script>
+</body>
+</html>
